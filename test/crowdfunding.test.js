@@ -130,7 +130,7 @@ contract('CrowdfundingFactory', function(accounts) {
         await crowdfundingFactory.createCampaign("Punk Marketing", price, 1534785300, 1540055700, 20, 24, {from: alice})
         await crowdfundingFactory.contribute(4, 1534785300, {from: owner, value: price})
         await crowdfundingFactory.goalReached(4, 1534785300, 1537660799, {from: owner})
-        await crowdfundingFactory.payDebt(4, 1534785300, {from: alice, value: 7000000000000000000})
+        await crowdfundingFactory.payDebt(4, 1534785300, {from: alice, value: 6000000000000000000})
         await crowdfundingFactory.claimShare(4, {from: owner});
     })
 });

@@ -1200,8 +1200,14 @@
       "links": {},
       "address": "0x8fb2fcf8b9f6a02eb45ea4d6c98d40fbf66e779f",
       "transactionHash": "0xdc5f7df7a611566d69d539fb9c5426bc16763d1beee3fa713efdeddbd1d9c0e1"
+    },
+    "1534977091928": {
+      "events": {},
+      "links": {},
+      "address": "0x50016241664ea84a38c32ec927ce7b1d9a3249c9",
+      "transactionHash": "0xdc5f7df7a611566d69d539fb9c5426bc16763d1beee3fa713efdeddbd1d9c0e1"
     }
   },
   "schemaVersion": "2.0.1",
-  "updatedAt": "2018-08-21T23:23:11.459Z"
+  "updatedAt": "2018-08-22T22:32:47.381Z"
 }
