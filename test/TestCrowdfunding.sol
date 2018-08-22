@@ -37,7 +37,7 @@ contract TestCrowdfunding {
         (name, , goal, beneficiary, , , , , ) = crowdfundingFactory.getCampaign(1);
 
         Assert.equal(name, "Punk Marketing", "Campaign should have had created.");
-        Assert.equal(goal/1000, 1000, "Campaign should have had created.");
+        Assert.equal(goal/100, 1000, "Campaign should have had created.");
         Assert.equal(beneficiary, this, "Campaign should have had created.");
     }
 }
