@@ -288,10 +288,10 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        301,
-                        302
+                        1032,
+                        1033
                       ],
-                      "referencedDeclaration": 301,
+                      "referencedDeclaration": 1032,
                       "src": "142:7:0",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -374,7 +374,7 @@
                         "name": "msg",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 298,
+                        "referencedDeclaration": 1029,
                         "src": "205:3:0",
                         "typeDescriptions": {
                           "typeIdentifier": "t_magic_message",
@@ -850,10 +850,10 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        301,
-                        302
+                        1032,
+                        1033
                       ],
-                      "referencedDeclaration": 301,
+                      "referencedDeclaration": 1032,
                       "src": "142:7:0",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -936,7 +936,7 @@
                         "name": "msg",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 298,
+                        "referencedDeclaration": 1029,
                         "src": "205:3:0",
                         "typeDescriptions": {
                           "typeIdentifier": "t_magic_message",
@@ -1189,19 +1189,19 @@
     "version": "0.4.24+commit.e67f0147.Emscripten.clang"
   },
   "networks": {
-    "1534461732110": {
-      "events": {},
-      "links": {},
-      "address": "0xbd0f64878e437c4dc5e99472d16fe2ed1e2a0b05",
-      "transactionHash": "0x4c48192bc0019ace4119f4d14b28177060fe98ef392afbbcac6af1f01266f232"
-    },
     "1534803666875": {
       "events": {},
       "links": {},
-      "address": "0x07f8b0757dbc24a3465ab07dfb40629a5cd2fa7a",
+      "address": "0xe1594abeee38e6f7e845c35070c9902e266e6114",
+      "transactionHash": "0xc2f14cd96d1c269e3f52b00e22506310ef7b85a3d414f444d40edae65df464f5"
+    },
+    "1534893732328": {
+      "events": {},
+      "links": {},
+      "address": "0x8fb2fcf8b9f6a02eb45ea4d6c98d40fbf66e779f",
       "transactionHash": "0xdc5f7df7a611566d69d539fb9c5426bc16763d1beee3fa713efdeddbd1d9c0e1"
     }
   },
   "schemaVersion": "2.0.1",
-  "updatedAt": "2018-08-20T22:21:16.309Z"
+  "updatedAt": "2018-08-21T23:23:11.459Z"
 }

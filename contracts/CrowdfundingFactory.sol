@@ -33,14 +33,16 @@ contract CrowdfundingFactory {
         mapping(uint => Investor) investors;
     }
 
-    uint256 public secInMonths = 52560000;
+    event LogPercentage(uint256 _percentage);
+
     uint256 public numCampaigns;
     uint256[] investorCampaigns;
     mapping(uint256 => Campaign) public campaigns;
 
     function createCampaign(string name, uint256 goal, uint256 startDate, uint256 endDate, uint256 rate, uint256 term) public returns(string){
-        uint256 campaignID = numCampaigns++;
-        campaigns[campaignID] = Campaign(name, 0, goal, msg.sender, startDate, endDate, term.mul(secInMonths), rate, term, Status.Active, 0, 0);
+        numCampaigns++;
+        uint256 campaignID = numCampaigns;
+        campaigns[campaignID] = Campaign(name, 0, goal*10**3, msg.sender, startDate, endDate, term, rate, term, Status.Active, 0, 0);
         return campaigns[campaignID].name;
     }
 
@@ -48,9 +50,28 @@ contract CrowdfundingFactory {
         return numCampaigns;
     }
 
-    function getCampaign(uint256 campaignID) public view returns(string, uint256, uint256, address, uint256, uint256, uint256, Status){
+    function getCampaign(uint256 campaignID) public view returns(string, uint256, uint256, address, uint256, uint256, uint256, uint, uint){
         Campaign storage campaign = campaigns[campaignID];
-        return (campaigns[campaignID].name, campaign.amount, campaign.goal, campaign.beneficiary, campaign.endDate, campaign.rate, campaign.term, campaign.status);
+        return (campaign.name, campaign.amount, campaign.goal, campaign.beneficiary, campaign.endDate, campaign.rate, campaign.term, uint(campaign.status), campaign.debt);
+    }
+
+    function contribute(uint256 campaignID, uint256 todayDate) public payable{
+        Campaign storage campaign = campaigns[campaignID];
+        uint value = msg.value*10**3;
+        require(campaign.amount + value > 0);
+        require(campaign.amount + value <= campaign.goal);
+        require(todayDate < campaign.endDate);
+        require(campaign.status == Status.Active);
+        require(campaign.amount < campaign.goal);
+        uint256 investorID = getInvestorID(campaignID, msg.sender);
+        if(investorID > 0){
+            campaign.investors[investorID].amount += value;
+        } else{
+            campaign.numInvestors++;
+            investorID = campaign.numInvestors;
+            campaign.investors[investorID] = Investor(msg.sender, value, 0);
+        }
+        campaign.amount += value;
     }
 
     function getDebt(uint256 campaignID) public view returns(uint256){
@@ -59,7 +80,7 @@ contract CrowdfundingFactory {
         return campaign.debt;
     }
 
-    function getInvestorID(uint256 campaignID, address investorAddr) private view returns(uint256){
+    function getInvestorID(uint256 campaignID, address investorAddr) public view returns(uint256){
         Campaign storage campaign = campaigns[campaignID];
         for (uint256 i = 1; i <= campaign.numInvestors; i ++) {
             if(campaign.investors[i].addr == investorAddr){
@@ -69,31 +90,22 @@ contract CrowdfundingFactory {
         return 0;
     }
 
-    function contribute(uint256 campaignID, uint256 todayDate) public payable{
+    function getInvestor(uint256 investorID, uint256 campaignID) public view returns(address, uint256, uint256){
         Campaign storage campaign = campaigns[campaignID];
-        require(campaign.amount + msg.value > 0);
-        require(todayDate < campaign.endDate);
-        require(campaign.status == Status.Active);
-        require(campaign.amount < campaign.goal);
-        uint256 investorID = getInvestorID(campaignID, msg.sender);
-        if(investorID > 0){
-            campaign.investors[investorID].amount += msg.value;
-        } else{
-            investorID = campaign.numInvestors++;
-            campaign.investors[investorID] = Investor(msg.sender, msg.value, 0);
-        }
-        campaign.amount += msg.value;
+        return (campaign.investors[investorID].addr, campaign.investors[investorID].amount, campaign.investors[investorID].balance);
     }
 
-    function goalReached(uint256 campaignID, uint256 todayDate) public payable {
+    function goalReached(uint256 campaignID, uint256 todayDate, uint256 refundDeadline) public payable {
         Campaign storage campaign = campaigns[campaignID];
-        require(campaign.amount >= campaign.goal);
+        require(todayDate <= campaign.endDate);
+        require(campaign.goal == campaign.amount);
         uint256 amount = campaign.amount;
         campaign.amount = 0;
         campaign.status = Status.Refunding;
-        campaign.debt = campaign.goal * (1+(campaign.rate/100));
-        campaign.refundDeadline = todayDate.add(campaign.term);
-        campaign.beneficiary.transfer(amount);
+        uint256 percentage = (campaign.goal*campaign.rate) / 100;
+        campaign.debt = campaign.goal + percentage;
+        campaign.refundDeadline = refundDeadline;
+        campaign.beneficiary.transfer(amount/1000);
     }
 
     function failCampaign(uint256 campaignID, uint256 todayDate) public {
@@ -119,21 +131,22 @@ contract CrowdfundingFactory {
 
     function payDebt(uint256 campaignID, uint256 todayDate) public payable {
         Campaign storage campaign = campaigns[campaignID];
+        uint256 value = msg.value*10**3;
         require(msg.sender == campaign.beneficiary);
         require(campaign.debt > 0);
         require(todayDate <= campaign.refundDeadline);
-        campaign.debt = campaign.debt.sub(msg.value);
+        campaign.debt = campaign.debt.sub(value);
         if(campaign.debt == 0){
             campaign.status = Status.Terminated;
         }
-        releaseHolderShares(campaignID, msg.value);
+        releaseHolderShares(campaignID, value);
     }
 
     function releaseHolderShares(uint256 campaignID, uint depositAmount) public {
         Campaign storage campaign = campaigns[campaignID];
         for (uint256 i = 1; i <= campaign.numInvestors; i ++) {
-            uint256 percentage = campaign.investors[i].amount.div(campaign.goal);
-            uint256 holderShare = depositAmount.mul(percentage);
+            uint256 percentage = (campaign.investors[i].amount * 100) / campaign.goal;
+            uint256 holderShare = (depositAmount * percentage) / 100;
             campaign.investors[i].balance += holderShare;
         }
     }

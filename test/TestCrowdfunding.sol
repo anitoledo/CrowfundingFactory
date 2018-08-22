@@ -31,16 +31,13 @@ contract TestCrowdfunding {
 
     function testGetCampaign() public {
         string memory name;
-        uint256 amount;
         uint256 goal;
         address beneficiary;
-        uint256 endDate;
-        uint256 rate;
-        uint256 term;
 
-        (name, amount, goal, beneficiary, endDate, rate, term,) = crowdfundingFactory.getCampaign(1);
-        string memory expected = "Punk Marketing";
+        (name, , goal, beneficiary, , , , , ) = crowdfundingFactory.getCampaign(1);
 
-        Assert.equal(name, expected, "Campaign should have had created.");
+        Assert.equal(name, "Punk Marketing", "Campaign should have had created.");
+        Assert.equal(goal/1000, 1000, "Campaign should have had created.");
+        Assert.equal(beneficiary, this, "Campaign should have had created.");
     }
 }
