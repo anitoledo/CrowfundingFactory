@@ -21,34 +21,92 @@
   <body>
     <div class="container">
       <div class="row">
-        <div class="col-xs-12 col-sm-8 col-sm-push-2">
-          <h1 class="text-center">Ani's Crowdfunding</h1>
-          <hr/>
-          <br/>
+        <div class="col-md-12">
+          <div class="col-md-8 col-md-offset-2">
+            <h1 class="text-center">Ani's Crowdfunding</h1>
+          </div>
+          <div class="col-md-2">
+            <!-- Button trigger modal -->
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+              Create Campaign
+            </button>
+          </div>
         </div>
       </div>
-
-      <div id="petsRow" class="row">
+      <hr/>
+      <br/>
+      <div id="campaignsRow" class="row">
         <!-- PETS LOAD HERE -->
       </div>
     </div>
 
-    <div id="petTemplate" style="display: none;">
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="form-group ">
+                <input type="text" class="form-control" id="name" placeholder="Campaign name">
+              </div>
+              
+    
+              <div class="form-group row">
+                <div class="col-sm-6">
+                  <label for="datetimepicker1">End date</label>
+                  <div class='input-group date' id='datetimepicker1'>
+                      <input type='text' class="form-control" />
+                      <span class="input-group-addon">
+                          <span class="glyphicon glyphicon-calendar"></span>
+                      </span>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group row">
+                
+                <div class="col-sm-4"><input type="number" class="form-control" id="goal" placeholder="Goal"></div>
+              </div>
+              <div class="form-group row">
+                <div class="col-sm-4"><input type="number" class="form-control" id="rate" placeholder="Rate"></div>
+              </div>
+              <div class="form-group row">
+                <div class="col-sm-4"><input type="number" class="form-control" id="term" placeholder="Term">
+                  Months
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary btn-createCampaign">Submit</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- End Modal -->
+
+
+    <div id="campaignTemplate" style="display: none;">
       <div class="col-md-6 col-sm-6 col-xs-12">
         <div class="panel panel-success panel-pet">
           <div class="panel-heading">
-            <h3 class="panel-title">Scrappy</h3>
-            <p class="pull-right">Active</p>
+            <h3 class="panel-title campaign-name">Campaign name</h3>
+            <p class="campaign-status pull-right">Active</p>
           </div>
           <div class="panel-body">
-            <strong>Beneficiary</strong>: <span class="pet-breed">0x24b75bbc184b2b007bb90a1ac7dd061ea81855dc</span><br/><br/>
+            <strong>Beneficiary</strong>: <span class="beneficiary-address">0x24b75bbc184b2b007bb90a1ac7dd061ea81855dc</span><br/><br/>
             <div class="progress">
-              <div class="progress-bar" style="width: 50%">50%</div>
+              <div class="progress-bar">50%</div>
             </div>
-            <strong>Breed</strong>: <span class="pet-breed">Golden Retriever</span><br/>
-            <strong>Age</strong>: <span class="pet-age">3</span><br/>
-            <strong>Location</strong>: <span class="pet-location">Warren, MI</span><br/><br/>
-            <button class="btn btn-default btn-adopt" type="button" data-id="0">Adopt</button>
+            <strong>Goal</strong>: <span class="campaign-goal">Golden Retriever</span><br/>
+            <strong>End date</strong>: <span class="campaign-endDate">3</span><br/>
+            <strong>Term</strong>: <span class="campaign-term">Warren, MI</span><br/>
+            <strong>Rate</strong>: <span class="campaign-rate">Warren, MI</span><br/><br/>
+            <input type="number" class="form-control" id="amount" style="width: 90px;display: inline-block;
+    margin-right: 2px;" placeholder="Amount">
+            <button class="btn btn-default btn-adopt" type="button" data-id="0">Contribute</button>
           </div>
         </div>
       </div>
@@ -56,10 +114,17 @@
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/js/bootstrap-datetimepicker.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="js/bootstrap.min.js"></script>
     <script src="js/web3.min.js"></script>
     <script src="js/truffle-contract.js"></script>
     <script src="js/app.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            $('#datetimepicker1').datetimepicker();
+        });
+    </script>
   </body>
 </html>

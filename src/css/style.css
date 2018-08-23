@@ -1,3 +1,12 @@
 .panel-title{
     display: inline-block;
 }
+.btn-primary{
+    margin-top: 27px;
+}
+.input-group-addon{
+    cursor: pointer;
+}
+.progress-bar{
+    color: black;
+}
