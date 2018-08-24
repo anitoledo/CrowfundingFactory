@@ -1,12 +1,22 @@
 .panel-title{
     display: inline-block;
 }
-.btn-primary{
-    margin-top: 27px;
+.number-input{
+    width: 100px;
+    display: inline-block;
+    margin-right: 2px;
 }
 .input-group-addon{
     cursor: pointer;
 }
 .progress-bar{
-    color: black;
+    font-weight: bold;
+}
+.progress{
+    height: 1.7rem;
+    font-size: 1rem;
+}
+.table{
+    font-size: .9rem;
+
 }
