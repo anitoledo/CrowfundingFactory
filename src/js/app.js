@@ -1,5 +1,5 @@
 var multiplier = 100
-var dameMasGasolina = 100000
+var dameMasGasolina = 1000000
 function getStatusName(status){
   var statusText = ""
   var css = "primary"
@@ -102,7 +102,8 @@ App = {
     $(document).on('click', '.btn-goalReached', App.handleGoalReached);
     $(document).on('click', '.btn-fail', App.handleFailCampaign);
     $(document).on('click', '.btn-paydebt', App.handlePayDebt);
-    $(document).on('click', '.btn-refund', App.handleClaimRefund);
+    $(document).on('click', '.btn-shares', App.handleClaimRefundorShares);
+    $(document).on('click', '.btn-refund', App.handleClaimRefundorShares);
   },
 
   createCampaign: function(event) {
@@ -116,7 +117,8 @@ App = {
     var startDate = Date.now();
     var date = $('#datetimepicker1').val();
     var endDate = Date.parse(date.toString());
-  
+    console.log("endDate")
+    console.log(endDate)
     web3.eth.getAccounts(function(error, accounts){
       if(error){
         console.log(error);
@@ -127,7 +129,7 @@ App = {
       App.contracts.CrowdfundingFactory.deployed().then(function(instance){
         crowdfundingInstance = instance;
         
-        return crowdfundingInstance.createCampaign(name, web3.toWei(goal, 'ether'), startDate, endDate, rate, term, {from: account});
+        return crowdfundingInstance.createCampaign(name, web3.toWei(goal), startDate, endDate, rate, term, {from: account});
       }).then(function(result){
         console.log(result)
         $("#exampleModal").modal('hide');
@@ -149,74 +151,144 @@ App = {
 
       App.contracts.CrowdfundingFactory.deployed().then(function(instance){
         crowdfundingInstance = instance;
-
-        return crowdfundingInstance.getInvestorCampaigns.call();
-      }).then(function(investorCampaigns){
-        console.log(investorCampaigns.length);
-        for (i=0; i<investorCampaigns.length;i++ ){
-          //console.log(investorCampaigns[i].toNumber())
-          
-        }
-        var xx = "eee";
-
         return crowdfundingInstance.getCampaigns.call();
-      }).then(function(campaigns){
+      }).then(async function(campaigns){
         var campaignTemplate = $('#campaignTemplate');
         var campaignsRow = $('#campaignsRow');
         campaignsRow.html("")
 
         for (i = 1; i <= campaigns; i ++) {
           const campaignId = i;
-          var investorId = crowdfundingInstance.getInvestorID.call(i,account).then(function(investorId){
+          var investor = await crowdfundingInstance.getInvestorID.call(i,account).then(async function(investorId){
             if (investorId > 0){
-              var investor = crowdfundingInstance.getInvestorInCampaign.call(campaignId,investorId.toNumber()).then(function(investor){
-                console.log(investor[1].toNumber())
-                console.log(campaignId);
-                campaignTemplate.find('.campaign-balance').text(web3.fromWei(investor[1].toNumber(), 'ether'));
-                //campaignsRow.append(campaignTemplate.html());
-                return investor[1].toNumber();
+              var investor = await crowdfundingInstance.getInvestorInCampaign.call(investorId.toNumber(),campaignId).then(function(investor){
+                //console.log("campaignId: "+campaignId+" Investor: amount="+investor[1].toNumber()+" balance="+investor[2].toNumber()+" address:"+investor[0]);
+                return {"isInvestor":true, "amount":web3.fromWei(investor[1].toNumber()/multiplier), "balance":web3.fromWei(investor[2].toNumber()/multiplier)}
               });
-            }
-            else{
               
+              return investor
             }
+            return {"isInvestor":false, "amount":"N/A", "balance":"N/A"}
             
           },function failure(){
 
           }.bind(campaignId));
-
           var campaign = crowdfundingInstance.getCampaign.call(i).then(function(data){
             var status = getStatusName(data[7].toNumber());
+            var refundDeadline = new Date(data[9].toNumber())
+            var color; if (percent == 0){color="black"}else{color="white"};
+            var percent = data[1]/data[2]*100
+            var date = new Date(data[4].toNumber())
+            campaignTemplate.find('.campaign-invested-amount').text(investor["amount"]);
+            campaignTemplate.find('.campaign-balance').text(investor["balance"]);
             campaignTemplate.find('.campaign-container').attr("id","campaign-"+campaignId);
             campaignTemplate.find('.campaign-container').attr("class","col-md-6 mt-3 campaign-container is-"+status[0].toLowerCase());
-            //$("#campaign-"+campaignId).find('.panel').addClass("panel-"+status[1]);
             campaignTemplate.find('.card').attr("class","card border-"+status[1]);
             campaignTemplate.find('.card-header').attr("class","card-header alert-"+status[1]+" text-"+status[1]);
             campaignTemplate.find('.campaign-name').text(data[0]);
             campaignTemplate.find('.campaign-status>span').text(status[0]);
             campaignTemplate.find('.campaign-status>span').attr("class","badge badge-"+status[1]);
-            campaignTemplate.find('.campaign-amount').text(web3.fromWei(data[1]/multiplier, 'ether'));
-
-            var percent = data[1]/data[2]*100
+            campaignTemplate.find('.campaign-amount').text(web3.fromWei(data[1]/multiplier));
+            campaignTemplate.find('.refund-deadline').text(refundDeadline.getDate()+"/"+refundDeadline.getMonth()+"/"+refundDeadline.getFullYear());
             campaignTemplate.find('.progress-bar').css("width",percent+"%");
-            var color; if (percent==0){color="black"}else{color="white"};
             campaignTemplate.find('.progress-bar').css("color",color);
             campaignTemplate.find('.progress-bar').text(percent+"%");
             campaignTemplate.find('.beneficiary-address').text(data[3]);
-            campaignTemplate.find('.campaign-goal').text(web3.fromWei(data[2]/multiplier, 'ether'));
-            var date = new Date(data[4].toNumber())
-            campaignTemplate.find('.campaign-endDate').text(date.getDate()+"/"+date.getMonth()+"/"+date.getFullYear());
+            campaignTemplate.find('.campaign-goal').text(web3.fromWei(data[2]/multiplier));
+            campaignTemplate.find('.campaign-endDate').text(date.getDate()+"/"+(date.getMonth()+1)+"/"+date.getFullYear());
             campaignTemplate.find('.campaign-term').text(data[6]+" months");
             campaignTemplate.find('.campaign-term-value').val(data[6]);
             campaignTemplate.find('.campaign-rate').text(data[5]+"%");
-            campaignTemplate.find('.campaign-debt').text(web3.fromWei(data[8]/multiplier, 'ether'));
+            campaignTemplate.find('.campaign-debt').text(web3.fromWei(data[8]/multiplier));
             campaignTemplate.find('.btn-contribute').text("Contribute");
             campaignTemplate.find('.btn-contribute').val(campaignId);
             campaignTemplate.find('.btn-goalReached').val(campaignId);
             campaignTemplate.find('.btn-fail').val(campaignId);
             campaignTemplate.find('.btn-refund').val(campaignId);
             campaignTemplate.find('.btn-paydebt').val(campaignId);
+            campaignTemplate.find('.btn-shares').val(campaignId);
             
+            // if (!investor["isInvestor"]){campaignTemplate.find(".investor-container").hide()}
+            // if (data[3] != account){
+            //   campaignTemplate.find(".beneficiary-container").hide()
+            //   campaignTemplate.find(".paydebt-container").css("visibility","hidden")
+            // }
+            // else{
+            //   campaignTemplate.find(".beneficiary-container").show()
+            //   campaignTemplate.find(".paydebt-container").css("visibility","visible")
+            // }
+            // if (status[0]!="Active"){
+            //   campaignTemplate.find(".contribute-container").css("visibility","hidden")
+            // }
+            // else{
+            //   campaignTemplate.find(".contribute-container").css("visibility","visible")
+            // }
+            // if (status[0]=="Terminated"){
+            //   campaignTemplate.find(".paydebt-container").hide()
+            //   campaignTemplate.find(".contribute-container").hide()
+            // }
+
+            if (status[0]=="Active"){
+              campaignTemplate.find(".visible-active").show()
+
+              if (data[1].toNumber() == data[2].toNumber()){
+
+                campaignTemplate.find('.btn-goalReached').show();
+              }
+              else{
+                campaignTemplate.find('.btn-goalReached').hide();
+              }
+             }
+             else{
+              campaignTemplate.find(".visible-active").hide()
+             }
+
+             if (status[0]=="Refunding"){
+              campaignTemplate.find(".visible-refunding").show()
+            }
+            else{
+              campaignTemplate.find(".visible-refunding").hide()
+             }
+
+             if (status[0] == "Terminated"){
+              campaignTemplate.find(".visible-terminated").show()
+             }
+             else{
+              campaignTemplate.find(".visible-terminated").hide()
+              if (status[0] == "Refunding") {
+                campaignTemplate.find(".visible-terminated.visible-refunding").show()  
+              }
+              
+             }
+
+             if (status[0] == "Failed"){
+              campaignTemplate.find(".visible-failed").show()
+             }
+             else{
+              campaignTemplate.find(".visible-failed").hide()
+              if (status[0] == "Active") {
+                campaignTemplate.find(".visible-active.visible-failed").show()
+              }
+             }
+
+             if (investor["isInvestor"]){
+              campaignTemplate.find(".investor-container").show()
+            }
+            else{
+              campaignTemplate.find(".investor-container").hide()
+            }
+            if (data[3] != account){
+              campaignTemplate.find(".beneficiary-container").hide()
+              campaignTemplate.find(".paydebt-container").css("visibility","hidden")
+            }
+            else{
+              campaignTemplate.find(".beneficiary-container").show()
+              campaignTemplate.find(".paydebt-container").css("visibility","visible")
+            }
+
+
+
+
 
 
 
@@ -277,9 +349,9 @@ App = {
 
       App.contracts.CrowdfundingFactory.deployed().then(function(instance){
         crowdfundingInstance = instance;
-        // var today = Date.now()
-        var today = Date.now()-5256000000
-        return crowdfundingInstance.contribute(campaignId, today, {from: account, value: web3.toWei(contributeAmount, 'ether')});
+        var today = Date.now()
+        //var today = Date.now()-5256000000
+        return crowdfundingInstance.contribute(campaignId, today, {from: account, value: web3.toWei(contributeAmount)});
       }).then(function(result){
         return App.displayCampaigns();
       }).catch(function(err){
@@ -287,12 +359,15 @@ App = {
       });
     });
   },
-  handleGoalReached: function(){
+  handleGoalReached: function(event){
     event.preventDefault();
     var campaignId = parseInt($(event.target).val());
     var term = parseInt($("#campaign-"+campaignId).find(".campaign-term-value").val());
     var today = new Date()
+    console.log(term)
+
     var refundDeadline = today.setMonth(today.getMonth()+term)
+    console.log(refundDeadline)
     var crowdfundingInstance;
     
     web3.eth.getAccounts(function(error, accounts){
@@ -304,7 +379,7 @@ App = {
 
       App.contracts.CrowdfundingFactory.deployed().then(function(instance){
         crowdfundingInstance = instance;
-        return crowdfundingInstance.goalReached(campaignId,Date.now(),refundDeadline,{from: account})
+        return crowdfundingInstance.goalReached(campaignId,Date.now(),refundDeadline,{from: account,gas:dameMasGasolina})
       }).then(function(result){
         return App.displayCampaigns();
       }).catch(function(err){
@@ -312,7 +387,7 @@ App = {
       });
     });
   },
-  handleFailCampaign: function(){
+  handleFailCampaign: function(event){
     event.preventDefault();
     var campaignId = parseInt($(event.target).val());
     var contributeAmount = parseInt($(event.target).data("amount"));
@@ -327,7 +402,7 @@ App = {
 
       App.contracts.CrowdfundingFactory.deployed().then(function(instance){
         crowdfundingInstance = instance;
-        return crowdfundingInstance.failCampaign(campaignId, Date.now(), {from: account});
+        return crowdfundingInstance.failCampaign(campaignId, Date.now()+5256000000, {from: account});
       }).then(function(result){
         return App.displayCampaigns();
       }).catch(function(err){
@@ -335,12 +410,13 @@ App = {
       });
     });
   },
-  handlePayDebt: function(){
+  handlePayDebt: function(event){
     event.preventDefault();
     var campaignId = parseInt($(event.target).val());
     var crowdfundingInstance;
     var amount = $("#campaign-"+campaignId).find(".debt-value").val()
     console.log(amount)
+    console.log(campaignId)
     web3.eth.getAccounts(function(error, accounts){
       if(error){
         console.log(error);
@@ -349,28 +425,31 @@ App = {
 
       App.contracts.CrowdfundingFactory.deployed().then(function(instance){
         crowdfundingInstance = instance;
-        return crowdfundingInstance.payDebt(campaignId,Date.now(), {from: account,value: web3.toWei(amount, 'ether'),gas:dameMasGasolina});
+        return crowdfundingInstance.payDebt(campaignId,Date.now(), {from: account,value: web3.toWei(amount),gas:dameMasGasolina});
       }).catch(function(err){
         console.log(err.message);
       });
     });
   },
-    handleClaimRefund: function(){
+    handleClaimRefundorShares: function(event){
     event.preventDefault();
     var campaignId = parseInt($(event.target).val());
     var crowdfundingInstance;
-    
+    var action = $(event.target).data("action")
     web3.eth.getAccounts(function(error, accounts){
       if(error){
         console.log(error);
       }
 
       var account = accounts[0];
-
       App.contracts.CrowdfundingFactory.deployed().then(function(instance){
         crowdfundingInstance = instance;
-        console.log(campaignId)
-        return crowdfundingInstance.claimRefund(campaignId, {from: account,gas:dameMasGasolina});
+        if (action == "shares"){
+          return crowdfundingInstance.claimShare(campaignId, {from: account,gas:dameMasGasolina});  
+        }
+        else if (action == "refund"){
+          return crowdfundingInstance.claimRefund(campaignId, {from: account,gas:dameMasGasolina});
+        }
       }).catch(function(err){
         console.log(err.message);
       });

@@ -95,7 +95,7 @@
               </div>
 
               
-              <button type="submit" class="btn btn-primary btn-createCampaign float-right">Crear</button>
+              <button type="submit" class="btn btn-primary btn-createCampaign float-right">Create campaign</button>
             </form>
           </div>
         </div>
@@ -111,21 +111,19 @@
               <div class="col-12">
             <h3 class="card-title campaign-name float-left">Campaign name</h3>
             <p class="campaign-status float-right"><span class="badge"></span></p>
+            <p class="visible-refunding">Refund Deadline: <span class="refund-deadline"></span> </p>
+
             </div>
               
             </div>
           </div>
           <div class="card-body">
             <div class="row">
-              <div class="col-6"><h4 class=" text-primary">Raised <span class="campaign-amount"></span> ETH</h4></div>
-              
-
+              <div class="col-6 visible-active visible-failed"><h4 class=" text-primary">Raised <span class="campaign-amount"></span> ETH</h4></div>
               <div class="col-6"><h3 class="float-right text-success">Goal <span class="campaign-goal"></span> ETH</h3></div>
               
             </div>
-            
-            
-            <div class="progress">
+            <div class="progress visible-active visible-failed">
               <div class="progress-bar bg-success" role="progressbar" ></div>
             </div>
             <br>
@@ -146,14 +144,15 @@
                 </tr>
               </tbody>
             </table>
+            <input type="hidden" class="campaign-term-value" name="" id="">
             <div class="row justify-content-between">
-              <div class="input-group col-6 ">
+              <div class="input-group col-6 paydebt-container visible-refunding">
                 <input type="number" min="1" name="debt" class="form-control debt-value" id="amount" placeholder="Amount ETH">
                 <div class="input-group-append">
                   <button class="btn btn-dark btn-paydebt" type="button" data-id="0">Pay debt</button>
                 </div>
               </div>
-              <div class="input-group col-6">
+              <div class="input-group col-6 contribute-container visible-active">
                 <input type="number" min="1" name="amount" class="form-control amount-value " id="amount"  placeholder="Amount ETH">
                 <div class="input-group-append">
                   <button class="btn btn-success btn-contribute" type="button" data-id="0">Contribute</button>
@@ -169,28 +168,28 @@
             </div>
             
             <div class="row">
-              <div class="col-6">
+              <div class="col-6 beneficiary-container">
                 <h5>Beneficiary </h5>
-                
-                <p>
-                  Debt:<strong> <span class="campaign-debt"></span></strong>
-                </p>
-                <p>
+                <p class="visible-active">
                   <button class="btn btn-outline-dark btn-goalReached" type="button" data-id="0">Goal reached</button>
                 </p>
-                <p>
+                <p class="visible-active">
                   <button class="btn btn-outline-dark btn-fail" type="button" data-id="0">Fail campaign</button>
                 </p>
-              </div>
-              <div class="col-6">
-                <h5>Investor</h5>
-                
-                <p>
-                  Balance: <strong><span class="campaign-balance">0</span></strong>
+                <p class="visible-refunding">
+                  Debt:<strong> <span class="campaign-debt"></span></strong>
                 </p>
-                <p><button class="btn btn-outline-dark btn-refund" type="button" data-id="0">Claim refund</button></p>
+              </div>
+              <div class="col-6 investor-container">
+                <h5>Investor</h5>
+                <p class="visible-failed"><button class="btn btn-outline-dark btn-refund" type="button" data-action="refund">Claim refund</button></p>
                 
-                <p><button class="btn btn-outline-dark btn-shares" type="button" data-id="0">Claim shares</button></p>
+                <p class="visible-terminated visible-refunding"><button class="btn btn-outline-dark btn-shares" type="button" data-action="shares">Claim shares</button></p>
+                
+                <p>Invested amount: <strong><span class="campaign-invested-amount"></span></strong> </p>
+                <p>
+                  Balance: <strong><span class="campaign-balance"></span></strong>
+                </p>
                 
                 
               </div>

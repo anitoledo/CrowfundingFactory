@@ -76,7 +76,7 @@ contract CrowdfundingFactory {
     function createCampaign(string name, uint256 goal, uint256 startDate, uint256 endDate, uint256 rate, uint256 term) public returns(string){
         numCampaigns++;
         uint256 campaignID = numCampaigns;
-        campaigns[campaignID] = Campaign(name, 0, goal.mul(multiplier), msg.sender, startDate, endDate, term, rate, term, Status.Active, 0, 0);
+        campaigns[campaignID] = Campaign(name, 0, goal.mul(multiplier), msg.sender, startDate, endDate, 0, rate, term, Status.Active, 0, 0);
         return campaigns[campaignID].name;
     }
 
@@ -84,9 +84,9 @@ contract CrowdfundingFactory {
         return numCampaigns;
     }
 
-    function getCampaign(uint256 campaignID) public view returns(string, uint256, uint256, address, uint256, uint256, uint256, uint, uint){
+    function getCampaign(uint256 campaignID) public view returns(string, uint256, uint256, address, uint256, uint256, uint256, uint, uint, uint){
         Campaign storage campaign = campaigns[campaignID];
-        return (campaign.name, campaign.amount, campaign.goal, campaign.beneficiary, campaign.endDate, campaign.rate, campaign.term, uint(campaign.status), campaign.debt);
+        return (campaign.name, campaign.amount, campaign.goal, campaign.beneficiary, campaign.endDate, campaign.rate, campaign.term, uint(campaign.status), campaign.debt, campaign.refundDeadline);
     }
 
     function contribute(uint256 campaignID, uint256 todayDate) validAmount(campaignID) active(campaignID) activeValidDate(campaignID, todayDate) stopInEmergency public payable{
