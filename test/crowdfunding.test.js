@@ -104,6 +104,16 @@ contract('CrowdfundingFactory', function(accounts) {
     it("should withdraw emergency money", async() => {
         const crowdfundingFactory = await CrowdfundingFactory.deployed()
         
+        const ownerInvestorID_2 = await crowdfundingFactory.getInvestorID.call(2, {from: owner});
+        var investorOwner_2 = await crowdfundingFactory.getInvestorInCampaign.call(ownerInvestorID_2, 2);
+
+        assert.equal( investorOwner_2[1].toNumber()/multiplier, 100, 'investor amount not ok')
         
+        await crowdfundingFactory.toggleEmergency({from: owner});
+        await crowdfundingFactory.withdrawEmergencyMoney({from: owner});
+
+        investorOwner_2 = await crowdfundingFactory.getInvestorInCampaign.call(ownerInvestorID_2, 2);
+
+        assert.equal( investorOwner_2[1].toNumber()/multiplier, 0, 'investor amount not ok')
     })
 });

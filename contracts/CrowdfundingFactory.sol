@@ -1,12 +1,20 @@
 pragma solidity ^0.4.17;
 import "./SafeMath.sol";
 
+/** @title Crowdfunding Factory. */
 contract CrowdfundingFactory {
     using SafeMath for uint256;
 
+    /** State Variables. 
+        - multiplier: Auxiliar value to store bigger numbers and convert to float in frontend
+        - numCampaigns: Number of campaigns stored
+        - owner: Contract's owner address
+        - stopped: Emergency stopped variable
+        - campaigns: Mapping of campaigns stored
+        - monthsInSeconds: Seconds in a month
+    */
     uint256 multiplier = 10**2;
     uint256 public numCampaigns;
-    // uint256[] investorCampaigns;
     address public owner;
     bool private stopped = false;
     mapping(uint256 => Campaign) public campaigns;
@@ -41,53 +49,61 @@ contract CrowdfundingFactory {
         mapping(uint => Investor) investors;
     }
 
+    /** @dev Validates if user is contract owner */
     modifier isOwner() { 
         require(msg.sender == owner); 
         _; 
     }
+    /** @dev Disables use of function in emergency state  */
     modifier stopInEmergency { require (!stopped); _; }
+    /** @dev Enables use of function in emergency state  */
     modifier onlyInEmergency { require (stopped); _; }
     
+    /** @dev Validates if campaign status is active  */
     modifier active(uint256 _campaignID){
         require(campaigns[_campaignID].status == Status.Active);
         _;
     }
+    /** @dev Validates if campaign status is failed  */
     modifier failed(uint256 _campaignID){
         require(campaigns[_campaignID].status == Status.Failed);
         _;
     }
+    /** @dev Validates if campaign end date is greater than today date  */
     modifier activeValidDate(uint256 _campaignID){
         require(block.timestamp <= campaigns[_campaignID].endDate);
         _;
     }
+    /** @dev Validates if campaign goal is greater than campaign amount  */
     modifier validAmount(uint256 _campaignID){
         require(campaigns[_campaignID].amount < campaigns[_campaignID].goal);
         _;
     }
+    /** @dev Validates if user is campaign's beneficiary  */
     modifier isBeneficiary(uint256 _campaignID){
         require(msg.sender == campaigns[_campaignID].beneficiary);
         _;
     }
 
-    event changeStopped(bool _stopped);
+
 
     constructor(){
         owner = msg.sender;
     }
 
+    /** @dev Turns to emergency state  */
     function toggleEmergency() isOwner public{
         stopped = !stopped;
     }
 
     function createCampaign(string name, string imageUrl, uint256 goal, uint256 endDate, uint256 rate, uint256 term) public {
-        require(block.timestamp < endDate.div(1000));
+        require(block.timestamp < endDate);
         numCampaigns++;
         uint256 campaignID = numCampaigns;
         campaigns[campaignID] = Campaign(name, imageUrl, 0, goal.mul(multiplier), msg.sender, endDate, 0, rate, term, Status.Active, 0, 0);
     }
 
     function contribute(uint256 campaignID) validAmount(campaignID) active(campaignID) activeValidDate(campaignID) stopInEmergency public payable{
-        emit changeStopped(stopped);
         Campaign storage campaign = campaigns[campaignID];
         uint value = msg.value.mul(multiplier);
         require(campaign.amount + value <= campaign.goal);
@@ -186,6 +202,7 @@ contract CrowdfundingFactory {
             for (uint256 j = 1; j <= campaigns[i].numInvestors; j++) {
                 if(campaigns[i].investors[j].addr == msg.sender){
                     refund = refund.add(campaigns[i].investors[j].amount);
+                    campaigns[i].investors[j].amount = 0;
                 }
             }
         }
