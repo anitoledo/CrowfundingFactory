@@ -6,7 +6,7 @@ contract CrowdfundingFactory {
 
     uint256 multiplier = 10**2;
     uint256 public numCampaigns;
-    uint256[] investorCampaigns;
+    // uint256[] investorCampaigns;
     address private owner;
     bool private stopped = false;
     mapping(uint256 => Campaign) public campaigns;
@@ -26,10 +26,10 @@ contract CrowdfundingFactory {
 
     struct Campaign{
         string name;
+        string imageUrl;
         uint256 amount;
         uint256 goal;
         address beneficiary;
-        uint256 startDate;
         uint256 endDate;
         uint256 refundDeadline;
         uint256 rate;
@@ -73,21 +73,21 @@ contract CrowdfundingFactory {
         stopped = !stopped;
     }
 
-    function createCampaign(string name, uint256 goal, uint256 startDate, uint256 endDate, uint256 rate, uint256 term) public returns(string){
+    function createCampaign(string name, string imageUrl, uint256 goal, uint256 endDate, uint256 rate, uint256 term) public returns(string){
         numCampaigns++;
         uint256 campaignID = numCampaigns;
-        campaigns[campaignID] = Campaign(name, 0, goal.mul(multiplier), msg.sender, startDate, endDate, 0, rate, term, Status.Active, 0, 0);
+        campaigns[campaignID] = Campaign(name, imageUrl, 0, goal.mul(multiplier), msg.sender, endDate, 0, rate, term, Status.Active, 0, 0);
         return campaigns[campaignID].name;
     }
 
-    function getCampaigns() public view returns(uint256){
-        return numCampaigns;
-    }
+    // function getCampaigns() public view returns(uint256){
+    //     return numCampaigns;
+    // }
 
-    function getCampaign(uint256 campaignID) public view returns(string, uint256, uint256, address, uint256, uint256, uint256, uint, uint, uint){
-        Campaign storage campaign = campaigns[campaignID];
-        return (campaign.name, campaign.amount, campaign.goal, campaign.beneficiary, campaign.endDate, campaign.rate, campaign.term, uint(campaign.status), campaign.debt, campaign.refundDeadline);
-    }
+    // function getCampaign(uint256 campaignID) public view returns(string, uint256, uint256, address, uint256, uint256, uint256, uint, uint, uint){
+    //     Campaign storage campaign = campaigns[campaignID];
+    //     return (campaign.name, campaign.amount, campaign.goal, campaign.beneficiary, campaign.endDate, campaign.rate, campaign.term, uint(campaign.status), campaign.debt, campaign.refundDeadline);
+    // }
 
     function contribute(uint256 campaignID, uint256 todayDate) validAmount(campaignID) active(campaignID) activeValidDate(campaignID, todayDate) stopInEmergency public payable{
         Campaign storage campaign = campaigns[campaignID];
@@ -104,10 +104,10 @@ contract CrowdfundingFactory {
         campaign.amount = campaign.amount.add(value);
     }
 
-    function getDebt(uint256 campaignID) isBeneficiary(campaignID) public view returns(uint256){
-        Campaign storage campaign = campaigns[campaignID];
-        return campaign.debt;
-    }
+    // function getDebt(uint256 campaignID) isBeneficiary(campaignID) public view returns(uint256){
+    //     Campaign storage campaign = campaigns[campaignID];
+    //     return campaign.debt;
+    // }
 
     function getInvestorID(uint256 campaignID, address investorAddr) public view returns(uint256){
         Campaign storage campaign = campaigns[campaignID];
@@ -186,17 +186,17 @@ contract CrowdfundingFactory {
         msg.sender.transfer(refund.div(multiplier));
     }
 
-    function getInvestorCampaigns() public returns(uint[]){
-        uint256[] storage investorCampaignsInside = investorCampaigns;
-        for (uint256 i = 1; i <= numCampaigns; i++) {
-            for (uint256 j = 1; j <= campaigns[i].numInvestors; j++) {
-                if(campaigns[i].investors[j].addr == msg.sender){
-                    investorCampaignsInside.push(i);
-                }
-            }
-        }
-        return investorCampaignsInside;
-    }
+    // function getInvestorCampaigns() public returns(uint[]){
+    //     uint256[] storage investorCampaignsInside = investorCampaigns;
+    //     for (uint256 i = 1; i <= numCampaigns; i++) {
+    //         for (uint256 j = 1; j <= campaigns[i].numInvestors; j++) {
+    //             if(campaigns[i].investors[j].addr == msg.sender){
+    //                 investorCampaignsInside.push(i);
+    //             }
+    //         }
+    //     }
+    //     return investorCampaignsInside;
+    // }
 
     function withdrawEmergencyMoney() onlyInEmergency public{
         uint256 refund;

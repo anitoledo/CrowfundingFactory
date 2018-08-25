@@ -19,3 +19,7 @@
 .table{
     font-size: .9rem;
 }
+.campaign-img{
+    object-fit: cover;
+    max-height: 250px;
+}
