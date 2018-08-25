@@ -7,7 +7,7 @@ contract CrowdfundingFactory {
     uint256 multiplier = 10**2;
     uint256 public numCampaigns;
     // uint256[] investorCampaigns;
-    address private owner;
+    address public owner;
     bool private stopped = false;
     mapping(uint256 => Campaign) public campaigns;
     
@@ -124,7 +124,7 @@ contract CrowdfundingFactory {
         return (campaign.investors[investorID].addr, campaign.investors[investorID].amount, campaign.investors[investorID].balance);
     }
 
-    function goalReached(uint256 campaignID, uint256 todayDate, uint256 refundDeadline) activeValidDate(campaignID, todayDate) stopInEmergency public payable {
+    function goalReached(uint256 campaignID, uint256 todayDate, uint256 refundDeadline) isBeneficiary(campaignID) activeValidDate(campaignID, todayDate) stopInEmergency public payable {
         Campaign storage campaign = campaigns[campaignID];
         require(campaign.goal == campaign.amount);
         uint256 amount = campaign.amount;

@@ -23,3 +23,9 @@
     object-fit: cover;
     max-height: 250px;
 }
+#emergencyStop{
+    z-index: 20000;
+    bottom: 1rem;
+    right:1rem;
+    position: fixed;
+}
