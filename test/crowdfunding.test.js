@@ -5,132 +5,105 @@ contract('CrowdfundingFactory', function(accounts) {
     const owner = accounts[0]
     const alice = accounts[1]
     const bob = accounts[2]
-    const emptyAddress = '0x0000000000000000000000000000000000000000'
 
-    var multiplier = 10**2;
     const price = web3.toWei(5, "ether")
+    var multiplier = 10**2;
+
 
     it("should create campaign", async() => {
         const crowdfundingFactory = await CrowdfundingFactory.deployed()
         
-        await crowdfundingFactory.createCampaign("Punk Marketing", 1000, 1534785300, 1540055700, 20, 24, {from: alice})
-        await crowdfundingFactory.createCampaign("Punk Marketing 2", 1000, 1534785300, 1540055700, 20, 24, {from: bob})
+        await crowdfundingFactory.createCampaign("Punk Marketing 1", "https://via.placeholder.com/350x150", 1000, 1566432000000, 10, 24, {from: alice})
+        await crowdfundingFactory.createCampaign("Punk Marketing 2", "https://via.placeholder.com/350x150", 1000, 1566432000000, 10, 24, {from: bob})
         
-        const count = await crowdfundingFactory.getCampaigns.call();
-        const campaign = await crowdfundingFactory.getCampaign.call(2, {from: alice});
+        const campaign_1 = await crowdfundingFactory.campaigns.call(1);
+        const campaign_2 = await crowdfundingFactory.campaigns.call(2);
 
-        assert.equal( 2, count.toNumber(), 'numCampaigns not ok')
-        assert.equal( "Punk Marketing 2", campaign[0], 'name campaign not ok')
-        assert.equal( 1000, campaign[2].toNumber()/multiplier, 'goal campaign not ok')
-        assert.equal( bob, campaign[3], 'beneficiary campaign not ok')
+        assert.equal( campaign_1[0], "Punk Marketing 1", 'numCampaigns not ok')
+        assert.equal( campaign_2[0], "Punk Marketing 2", 'name campaign not ok')
     })
 
     it("should contribute to campaign", async() => {
         const crowdfundingFactory = await CrowdfundingFactory.deployed()
         
-        await crowdfundingFactory.contribute(1, 1534785300, {from: owner, value: 100})
-        await crowdfundingFactory.contribute(2, 1534785300, {from: alice, value: 100})
-        await crowdfundingFactory.contribute(2, 1534785300, {from: owner, value: 100})
-        await crowdfundingFactory.contribute(2, 1534785300, {from: alice, value: 100})
+        await crowdfundingFactory.contribute(1, {from: alice, value: 100})
+        await crowdfundingFactory.contribute(1, {from: alice, value: 100})
+        await crowdfundingFactory.contribute(1, {from: owner, value: 100})
+        await crowdfundingFactory.contribute(2, {from: owner, value: 100})
 
-        const campaign = await crowdfundingFactory.getCampaign.call(2, {from: owner});
-        const aliceInvestorID = await crowdfundingFactory.getInvestorID.call(2, alice, {from: alice});
-        const ownerInvestorID = await crowdfundingFactory.getInvestorID.call(2, owner, {from: owner});
-        const investor = await crowdfundingFactory.getInvestorInCampaign.call(1, 2, {from: alice});
-        const ownerCampaigns = await crowdfundingFactory.getInvestorCampaigns.call({from: owner});
-        const aliceCampaigns = await crowdfundingFactory.getInvestorCampaigns.call({from: alice});
+        const campaign_1 = await crowdfundingFactory.campaigns.call(1);
+        const campaign_2 = await crowdfundingFactory.campaigns.call(2);
 
-        assert.equal( 300, campaign[1].toNumber()/multiplier, 'campaign amount not ok')
-        assert.equal( 1, aliceInvestorID.toNumber(), 'alice investorID not ok')
-        assert.equal( 2, ownerInvestorID.toNumber(), 'owner investorID not ok')
-        assert.equal( alice, investor[0], 'investor address not ok')
-        assert.equal( 200, investor[1].toNumber()/multiplier, 'investor amount not ok')
-        assert.equal( 0, investor[2].toNumber(), 'investor balance not ok')
-        assert.equal( 2, ownerCampaigns.length, 'owner campaigns not ok')
-        assert.equal( 1, aliceCampaigns.length, 'alice campaigns not ok')
+        const aliceInvestorID_1 = await crowdfundingFactory.getInvestorID.call(1, {from: alice});
+        const ownerInvestorID_1 = await crowdfundingFactory.getInvestorID.call(1, {from: owner});
+        const ownerInvestorID_2 = await crowdfundingFactory.getInvestorID.call(2, {from: owner});
+
+        assert.equal( aliceInvestorID_1.toNumber(), 1, 'investor id not ok')
+        assert.equal( ownerInvestorID_1.toNumber(), 2, 'investor id not ok')
+        assert.equal( ownerInvestorID_2.toNumber(), 1, 'investor id not ok')
+
+        const investorAlice_1 = await crowdfundingFactory.getInvestorInCampaign.call(aliceInvestorID_1, 1);
+        const investorOwner_1 = await crowdfundingFactory.getInvestorInCampaign.call(ownerInvestorID_1, 1);
+        const investorOwner_2 = await crowdfundingFactory.getInvestorInCampaign.call(ownerInvestorID_2, 2);
+
+        assert.equal( campaign_1[2].toNumber()/multiplier, 300, 'campaign amount not ok')
+        assert.equal( campaign_2[2].toNumber()/multiplier, 100, 'campaign amount not ok')
+        assert.equal( investorAlice_1[1].toNumber()/multiplier, 200, 'investor amount not ok')
+        assert.equal( investorOwner_1[1].toNumber()/multiplier, 100, 'investor amount not ok')
+        assert.equal( investorOwner_2[1].toNumber()/multiplier, 100, 'investor amount not ok')
     })
 
     it("should terminate campaign", async() => {
         const crowdfundingFactory = await CrowdfundingFactory.deployed()
         
-        await crowdfundingFactory.createCampaign("Punk Marketing 3", 100, 1534785300, 1540055700, 10, 24, {from: alice})
-        await crowdfundingFactory.contribute(3, 1534785300, {from: owner, value: 70})
-        await crowdfundingFactory.contribute(3, 1534785300, {from: bob, value: 30})
-        await crowdfundingFactory.goalReached(3, 1534785300, 1537660799, {from: owner})
+        await crowdfundingFactory.contribute(1, {from: alice, value: 700})
+        await crowdfundingFactory.goalReached(1, {from: alice})
 
-        var campaign = await crowdfundingFactory.getCampaign.call(3, {from: owner});
-      
-        assert.equal( 100, campaign[2].toNumber()/multiplier, 'goal amount not ok')
-        assert.equal( 10, campaign[5].toNumber(), 'rate amount not ok')
-        assert.equal( 110, campaign[8].toNumber()/multiplier, 'debt amount not ok')
-        assert.equal( 1, campaign[7].toNumber(), 'status not ok')
+        var campaign_1 = await crowdfundingFactory.campaigns.call(1);
 
-        await crowdfundingFactory.payDebt(3, 1534785300, {from: alice, value: 100})
-        await crowdfundingFactory.payDebt(3, 1534785300, {from: alice, value: 10})
+        assert.equal( campaign_1[9].toNumber(), 1, 'status not ok')
+        assert.equal( campaign_1[10].toNumber()/multiplier, 1100, 'debt amount not ok')
 
-        const debt = await crowdfundingFactory.getDebt.call(3, {from: alice});
-        const investorOwner = await crowdfundingFactory.getInvestorInCampaign.call(1, 3, {from: owner});
-        const investorBob = await crowdfundingFactory.getInvestorInCampaign.call(2, 3, {from: bob});
+        await crowdfundingFactory.payDebt(1, {from: alice, value: 1100})
 
-        campaign = await crowdfundingFactory.getCampaign.call(3, {from: owner});
+        campaign_1 = await crowdfundingFactory.campaigns.call(1);
+        const aliceInvestorID_1 = await crowdfundingFactory.getInvestorID.call(1, {from: alice});
+        const ownerInvestorID_1 = await crowdfundingFactory.getInvestorID.call(1, {from: owner});
+        const investorAlice_1 = await crowdfundingFactory.getInvestorInCampaign.call(aliceInvestorID_1, 1);
+        const investorOwner_1 = await crowdfundingFactory.getInvestorInCampaign.call(ownerInvestorID_1, 1);
 
-        assert.equal( 0, debt.toNumber()/multiplier, 'debt amount not ok')
-        assert.equal( 77, investorOwner[2].toNumber()/multiplier, 'inevstor balance amount not ok')
-        assert.equal( 33, investorBob[2].toNumber()/multiplier, 'inevstor balance amount not ok')
-        assert.equal( 2, campaign[7].toNumber(), 'status not ok')
-    })
-
-    it("should fail campaign", async() => {
-        const crowdfundingFactory = await CrowdfundingFactory.deployed()
-        
-        var investorOwner = await crowdfundingFactory.getInvestorInCampaign.call(1, 1, {from: owner});
-
-        assert.equal( 0, investorOwner[2].toNumber()/multiplier, 'balance amount not ok')
-
-        await crowdfundingFactory.failCampaign(1, 1540055800, {from: owner})
-
-        const campaign = await crowdfundingFactory.getCampaign.call(1, {from: owner});
-        investorOwner = await crowdfundingFactory.getInvestorInCampaign.call(1, 1, {from: owner});
-
-        assert.equal( 100, investorOwner[2].toNumber()/multiplier, 'balance amount not ok')
-        assert.equal( 3, campaign[7].toNumber(), 'status not ok')
+        assert.equal( campaign_1[10].toNumber()/multiplier, 0, 'debt amount not ok')
+        assert.equal( investorAlice_1[2].toNumber()/multiplier, 990, 'investor balance amount not ok')
+        assert.equal( investorOwner_1[2].toNumber()/multiplier, 110, 'investor balance amount not ok')
+        assert.equal( campaign_1[9].toNumber(), 2, 'status not ok')
     })
 
     it("should claim share", async() => {
         const crowdfundingFactory = await CrowdfundingFactory.deployed()
 
-        var investorBob = await crowdfundingFactory.getInvestorInCampaign.call(2, 3, {from: bob});
+        const aliceInvestorID_1 = await crowdfundingFactory.getInvestorID.call(1, {from: alice});
+        var investorAlice_1 = await crowdfundingFactory.getInvestorInCampaign.call(aliceInvestorID_1, 1);
 
-        assert.equal( 33, investorBob[2].toNumber()/multiplier, 'balance amount not ok')
-        
-        await crowdfundingFactory.claimShare(3, {from: bob});
+        await crowdfundingFactory.claimShare(1, {from: alice});
 
-        investorBob = await crowdfundingFactory.getInvestorInCampaign.call(2, 3, {from: bob});
+        investorAlice_1 = await crowdfundingFactory.getInvestorInCampaign.call(aliceInvestorID_1, 1);
 
-        assert.equal( 0, investorBob[2].toNumber()/multiplier, 'balance amount not ok')
-    })
-
-    it("should claim refund", async() => {
-        const crowdfundingFactory = await CrowdfundingFactory.deployed()
-
-        var investorOwner = await crowdfundingFactory.getInvestorInCampaign.call(1, 1, {from: owner});
-
-        assert.equal( 100, investorOwner[2].toNumber()/multiplier, 'balance amount not ok')
-        
-        await crowdfundingFactory.claimRefund(1, {from: owner});
-
-        investorOwner = await crowdfundingFactory.getInvestorInCampaign.call(1, 1, {from: owner});
-
-        assert.equal( 0, investorOwner[2].toNumber()/multiplier, 'balance amount not ok')
+        assert.equal( investorAlice_1[2].toNumber()/multiplier, 0, 'investor balance amount not ok')
     })
 
     it("test ether", async() => {
         const crowdfundingFactory = await CrowdfundingFactory.deployed()
         
-        await crowdfundingFactory.createCampaign("Punk Marketing", price, 1534785300, 1540055700, 20, 24, {from: alice})
-        await crowdfundingFactory.contribute(4, 1534785300, {from: owner, value: price})
-        await crowdfundingFactory.goalReached(4, 1534785300, 1537660799, {from: owner})
-        await crowdfundingFactory.payDebt(4, 1534785300, {from: alice, value: 6000000000000000000})
-        await crowdfundingFactory.claimShare(4, {from: owner});
+        await crowdfundingFactory.createCampaign("Punk Marketing", "https://via.placeholder.com/350x150", price, 1566432000000, 20, 24, {from: alice})
+        await crowdfundingFactory.contribute(3, {from: alice, value: price})
+        await crowdfundingFactory.goalReached(3, {from: alice})
+        await crowdfundingFactory.payDebt(3, {from: alice, value: 6000000000000000000})
+        await crowdfundingFactory.claimShare(3, {from: alice});
+    })
+
+    it("should withdraw emergency money", async() => {
+        const crowdfundingFactory = await CrowdfundingFactory.deployed()
+        
+        
     })
 });
