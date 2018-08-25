@@ -7,9 +7,10 @@ contract CrowdfundingFactory {
     uint256 multiplier = 10**2;
     uint256 public numCampaigns;
     // uint256[] investorCampaigns;
-    address private owner;
+    address public owner;
     bool private stopped = false;
     mapping(uint256 => Campaign) public campaigns;
+    uint256 monthsInSeconds = 2592000;
     
     enum Status { 
         Active, 
@@ -40,9 +41,12 @@ contract CrowdfundingFactory {
         mapping(uint => Investor) investors;
     }
 
-    modifier isOwner() { if(msg.sender == owner) _; }
-    modifier stopInEmergency { if (!stopped) _; }
-    modifier onlyInEmergency { if (stopped) _; }
+    modifier isOwner() { 
+        require(msg.sender == owner); 
+        _; 
+    }
+    modifier stopInEmergency { require (!stopped); _; }
+    modifier onlyInEmergency { require (stopped); _; }
     
     modifier active(uint256 _campaignID){
         require(campaigns[_campaignID].status == Status.Active);
@@ -52,8 +56,8 @@ contract CrowdfundingFactory {
         require(campaigns[_campaignID].status == Status.Failed);
         _;
     }
-    modifier activeValidDate(uint256 _campaignID, uint256 _todayDate){
-        require(_todayDate <= campaigns[_campaignID].endDate);
+    modifier activeValidDate(uint256 _campaignID){
+        require(block.timestamp <= campaigns[_campaignID].endDate);
         _;
     }
     modifier validAmount(uint256 _campaignID){
@@ -65,35 +69,29 @@ contract CrowdfundingFactory {
         _;
     }
 
+    event changeStopped(bool _stopped);
+
     constructor(){
         owner = msg.sender;
     }
 
     function toggleEmergency() isOwner public{
-        stopped = !stopped;
+        stopped = true;
     }
 
-    function createCampaign(string name, string imageUrl, uint256 goal, uint256 endDate, uint256 rate, uint256 term) public returns(string){
+    function createCampaign(string name, string imageUrl, uint256 goal, uint256 endDate, uint256 rate, uint256 term) public {
+        require(block.timestamp < endDate.div(1000));
         numCampaigns++;
         uint256 campaignID = numCampaigns;
         campaigns[campaignID] = Campaign(name, imageUrl, 0, goal.mul(multiplier), msg.sender, endDate, 0, rate, term, Status.Active, 0, 0);
-        return campaigns[campaignID].name;
     }
 
-    // function getCampaigns() public view returns(uint256){
-    //     return numCampaigns;
-    // }
-
-    // function getCampaign(uint256 campaignID) public view returns(string, uint256, uint256, address, uint256, uint256, uint256, uint, uint, uint){
-    //     Campaign storage campaign = campaigns[campaignID];
-    //     return (campaign.name, campaign.amount, campaign.goal, campaign.beneficiary, campaign.endDate, campaign.rate, campaign.term, uint(campaign.status), campaign.debt, campaign.refundDeadline);
-    // }
-
-    function contribute(uint256 campaignID, uint256 todayDate) validAmount(campaignID) active(campaignID) activeValidDate(campaignID, todayDate) stopInEmergency public payable{
+    function contribute(uint256 campaignID) validAmount(campaignID) active(campaignID) activeValidDate(campaignID) stopInEmergency public payable{
+        emit changeStopped(stopped);
         Campaign storage campaign = campaigns[campaignID];
         uint value = msg.value.mul(multiplier);
         require(campaign.amount + value <= campaign.goal);
-        uint256 investorID = getInvestorID(campaignID, msg.sender);
+        uint256 investorID = getInvestorID(campaignID);
         if(investorID > 0){
             campaign.investors[investorID].amount = campaign.investors[investorID].amount.add(value);
         } else{
@@ -104,15 +102,10 @@ contract CrowdfundingFactory {
         campaign.amount = campaign.amount.add(value);
     }
 
-    // function getDebt(uint256 campaignID) isBeneficiary(campaignID) public view returns(uint256){
-    //     Campaign storage campaign = campaigns[campaignID];
-    //     return campaign.debt;
-    // }
-
-    function getInvestorID(uint256 campaignID, address investorAddr) public view returns(uint256){
+    function getInvestorID(uint256 campaignID) public view returns(uint256){
         Campaign storage campaign = campaigns[campaignID];
         for (uint256 i = 1; i <= campaign.numInvestors; i ++) {
-            if(campaign.investors[i].addr == investorAddr){
+            if(campaign.investors[i].addr == msg.sender){
                 return i;
             }
         }
@@ -124,7 +117,7 @@ contract CrowdfundingFactory {
         return (campaign.investors[investorID].addr, campaign.investors[investorID].amount, campaign.investors[investorID].balance);
     }
 
-    function goalReached(uint256 campaignID, uint256 todayDate, uint256 refundDeadline) activeValidDate(campaignID, todayDate) stopInEmergency public payable {
+    function goalReached(uint256 campaignID) activeValidDate(campaignID) isBeneficiary(campaignID) stopInEmergency public payable {
         Campaign storage campaign = campaigns[campaignID];
         require(campaign.goal == campaign.amount);
         uint256 amount = campaign.amount;
@@ -132,13 +125,14 @@ contract CrowdfundingFactory {
         campaign.status = Status.Refunding;
         uint256 percentage = (campaign.goal*campaign.rate) / 100;
         campaign.debt = campaign.goal + percentage;
-        campaign.refundDeadline = refundDeadline;
+        uint256 months = monthsInSeconds.mul(campaign.term);
+        campaign.refundDeadline = months.add(block.timestamp);
         campaign.beneficiary.transfer(amount.div(multiplier));
     }
 
-    function failCampaign(uint256 campaignID, uint256 todayDate) validAmount(campaignID) stopInEmergency public {
+    function failCampaign(uint256 campaignID) validAmount(campaignID) stopInEmergency public {
         Campaign storage campaign = campaigns[campaignID];
-        require(campaign.endDate < todayDate);
+        require(campaign.endDate < block.timestamp);
         campaign.status = Status.Failed;
         for (uint256 i = 1; i <= campaign.numInvestors; i ++) {
             campaign.investors[i].balance = campaign.investors[i].amount;
@@ -147,7 +141,7 @@ contract CrowdfundingFactory {
 
     function claimRefund(uint256 campaignID) failed(campaignID) stopInEmergency public payable {
         Campaign storage campaign = campaigns[campaignID];
-        uint256 investorID = getInvestorID(campaignID, msg.sender);
+        uint256 investorID = getInvestorID(campaignID);
         require(investorID > 0);
         require(campaign.investors[investorID].balance > 0);
         uint256 refund = campaign.investors[investorID].balance;
@@ -155,11 +149,11 @@ contract CrowdfundingFactory {
         msg.sender.transfer(refund.div(multiplier));
     }
 
-    function payDebt(uint256 campaignID, uint256 todayDate) isBeneficiary(campaignID) stopInEmergency public payable {
+    function payDebt(uint256 campaignID) isBeneficiary(campaignID) stopInEmergency public payable {
         Campaign storage campaign = campaigns[campaignID];
         uint256 value = msg.value.mul(multiplier);
         require(campaign.debt > 0);
-        require(todayDate <= campaign.refundDeadline);
+        require(block.timestamp <= campaign.refundDeadline);
         campaign.debt = campaign.debt.sub(value);
         if(campaign.debt == 0){
             campaign.status = Status.Terminated;
@@ -178,25 +172,13 @@ contract CrowdfundingFactory {
 
     function claimShare(uint256 campaignID) stopInEmergency public payable {
         Campaign storage campaign = campaigns[campaignID];
-        uint256 investorID = getInvestorID(campaignID, msg.sender);
+        uint256 investorID = getInvestorID(campaignID);
         require(investorID > 0);
         require(campaign.investors[investorID].balance > 0);
         uint256 refund = campaign.investors[investorID].balance;
         campaign.investors[investorID].balance = 0;
         msg.sender.transfer(refund.div(multiplier));
     }
-
-    // function getInvestorCampaigns() public returns(uint[]){
-    //     uint256[] storage investorCampaignsInside = investorCampaigns;
-    //     for (uint256 i = 1; i <= numCampaigns; i++) {
-    //         for (uint256 j = 1; j <= campaigns[i].numInvestors; j++) {
-    //             if(campaigns[i].investors[j].addr == msg.sender){
-    //                 investorCampaignsInside.push(i);
-    //             }
-    //         }
-    //     }
-    //     return investorCampaignsInside;
-    // }
 
     function withdrawEmergencyMoney() onlyInEmergency public{
         uint256 refund;
