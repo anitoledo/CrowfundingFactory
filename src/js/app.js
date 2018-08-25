@@ -1,4 +1,5 @@
 var multiplier = 100
+var miliseconds = 1000
 var dameMasGasolina = 1000000
 
 App = {
@@ -54,7 +55,7 @@ App = {
     var rate = $('#rate').val();
     var term = $('#term').val();
     var date = $('#datetimepicker1').val();
-    var endDate = Date.parse(date.toString());
+    var endDate = Date.parse(date)/multiplier;
 
     if (name == "" || goal == "" || rate =="" || term == "" || isNaN(endDate)){
       $(".alert-danger").show()
@@ -118,6 +119,12 @@ App = {
       var account = accounts[0];
       App.contracts.CrowdfundingFactory.deployed().then(function(instance){
         crowdfundingInstance = instance;
+        return crowdfundingInstance.owner.call();
+
+      }).then(function(owner){
+        if (owner == account){
+          $("#emergencyStop").show()
+        }
         return crowdfundingInstance.numCampaigns.call();
       }).then(async function(campaigns){
 
@@ -245,6 +252,8 @@ App = {
       App.contracts.CrowdfundingFactory.deployed().then(function(instance){
         crowdfundingInstance = instance;
         return crowdfundingInstance.payDebt(campaignId, {from: account,value: web3.toWei(amount),gas:dameMasGasolina});
+      }).then(function(result){
+        return App.displayCampaigns();
       }).catch(function(err){
         console.log(err.message);
       });
@@ -269,6 +278,8 @@ App = {
         else if (action == "refund"){
           return crowdfundingInstance.claimRefund(campaignId, {from: account,gas:dameMasGasolina});
         }
+      }).then(function(result){
+        return App.displayCampaigns();
       }).catch(function(err){
         console.log(err.message);
       });
@@ -305,7 +316,7 @@ $('#exampleModal').on('show.bs.modal', function (event) {
 
 $('#datetimepicker1').datepicker({
   uiLibrary: 'bootstrap4',
-  minDate: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())
+  minDate: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()+1)
 });
 
 $('body').tooltip({
@@ -352,10 +363,11 @@ function getStatusName(status){
 function displayConstraints(data,campaignId,investor,account,campaignTemplate,campaignsRow){
   
   var status = getStatusName(data[9].toNumber());
-  var refundDeadline = new Date(data[6].toNumber())
+  var refundDeadline = new Date(data[6].toNumber()*miliseconds)
+  console.log(refundDeadline)
   var percent = data[2]/data[3]*multiplier
   var color; if (percent == 0){color="black"}else{color="white"};
-  var date = new Date(data[5].toNumber())
+  var date = new Date(data[5].toNumber()*miliseconds)
   campaignTemplate.find('.campaign-container').attr("id","campaign-"+campaignId);
   campaignTemplate.find('.campaign-container').attr("class","col-md-6 campaign-container is-"+status[0].toLowerCase());
   campaignTemplate.find('.card-header').attr("class","card-header alert-"+status[1]+" text-"+status[1]);
@@ -375,7 +387,7 @@ function displayConstraints(data,campaignId,investor,account,campaignTemplate,ca
   campaignTemplate.find('.campaign-term-value').val(data[8]);
   campaignTemplate.find('.campaign-rate').text(data[7]+"%");
   campaignTemplate.find('.campaign-debt').text(web3.fromWei(data[10]/multiplier));
-  campaignTemplate.find('.refund-deadline').text(refundDeadline.getDate()+"/"+refundDeadline.getMonth()+"/"+refundDeadline.getFullYear());
+  campaignTemplate.find('.refund-deadline').text(refundDeadline.getDate()+"/"+(refundDeadline.getMonth()+1)+"/"+refundDeadline.getFullYear());
   campaignTemplate.find('.beneficiary-address').text(data[4]);
   campaignTemplate.find('.btn-contribute').text("Contribute");
   campaignTemplate.find('.btn-contribute').val(campaignId);
