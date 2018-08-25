@@ -76,7 +76,7 @@ contract CrowdfundingFactory {
     }
 
     function toggleEmergency() isOwner public{
-        stopped = true;
+        stopped = !stopped;
     }
 
     function createCampaign(string name, string imageUrl, uint256 goal, uint256 endDate, uint256 rate, uint256 term) public {

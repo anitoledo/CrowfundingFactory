@@ -49,13 +49,14 @@ App = {
   createCampaign: function(event) {
 
     event.preventDefault();
-    var imageUrl = ""
     var name = $('#name').val();
     var goal = $('#goal').val();
     var rate = $('#rate').val();
     var term = $('#term').val();
-    
-    if (name == "" || goal == "" || rate =="" || term == ""){
+    var date = $('#datetimepicker1').val();
+    var endDate = Date.parse(date.toString());
+
+    if (name == "" || goal == "" || rate =="" || term == "" || isNaN(endDate)){
       $(".alert-danger").show()
       return 0
     }
@@ -64,9 +65,7 @@ App = {
       $(".alert-danger").hide()
       
     }
-    var startDate = Date.now();
-    var date = $('#datetimepicker1').val();
-    var endDate = Date.parse(date.toString());
+    
     console.log("endDate")
     console.log(endDate)
     web3.eth.getAccounts(function(error, accounts){
@@ -102,6 +101,7 @@ App = {
       }}).then(function(result){
         console.log(result)
         $("#exampleModal").modal('hide');
+        $("#createCampaign")[0].reset()
         return App.displayCampaigns();
       }).catch(function(err){
         console.log(err.message);
@@ -127,7 +127,7 @@ App = {
 
         for (i = 1; i <= campaigns; i ++) {
           const campaignId = i;
-          var investor = await crowdfundingInstance.getInvestorID.call(i,account).then(async function(investorId){
+          var investor = await crowdfundingInstance.getInvestorID.call(i,{from:account}).then(async function(investorId){
             if (investorId > 0){
               var investor = await crowdfundingInstance.getInvestorInCampaign.call(investorId.toNumber(),campaignId).then(function(investor){
                 return {"isInvestor":true, "amount":web3.fromWei(investor[1].toNumber()/multiplier), "balance":web3.fromWei(investor[2].toNumber()/multiplier)}
@@ -145,16 +145,13 @@ App = {
 
           }.bind(campaignId))
         }
+        //$grid.isotope({ filter: '*' });  
+        //$grid.isotope('layout');  
+
       }).catch(function(err){
         console.log(err.message);
       });
     })
-    var $grid =$('#campaignsRow').isotope({
-  // options
-  itemSelector: '.campaign-container',
-  layoutMode: 'fitRows',
-      });
- $grid.isotope({ filter: ".is-refunding" });
 
   },
 
@@ -174,9 +171,7 @@ App = {
 
       App.contracts.CrowdfundingFactory.deployed().then(function(instance){
         crowdfundingInstance = instance;
-        var today = Date.now()
-        //var today = Date.now()-5256000000
-        return crowdfundingInstance.contribute(campaignId, today, {from: account, value: web3.toWei(contributeAmount)});
+        return crowdfundingInstance.contribute(campaignId, {from: account, value: web3.toWei(contributeAmount)});
       }).then(function(result){
         return App.displayCampaigns();
       }).catch(function(err){
@@ -188,11 +183,10 @@ App = {
     event.preventDefault();
     var campaignId = parseInt($(event.target).val());
     var term = parseInt($("#campaign-"+campaignId).find(".campaign-term-value").val());
-    var today = new Date()
+  
     console.log(term)
 
-    var refundDeadline = today.setMonth(today.getMonth()+term)
-    console.log(refundDeadline)
+    
     var crowdfundingInstance;
     
     web3.eth.getAccounts(function(error, accounts){
@@ -204,7 +198,7 @@ App = {
 
       App.contracts.CrowdfundingFactory.deployed().then(function(instance){
         crowdfundingInstance = instance;
-        return crowdfundingInstance.goalReached(campaignId,Date.now(),refundDeadline,{from: account,gas:dameMasGasolina})
+        return crowdfundingInstance.goalReached(campaignId,{from: account,gas:dameMasGasolina})
       }).then(function(result){
         return App.displayCampaigns();
       }).catch(function(err){
@@ -227,7 +221,7 @@ App = {
 
       App.contracts.CrowdfundingFactory.deployed().then(function(instance){
         crowdfundingInstance = instance;
-        return crowdfundingInstance.failCampaign(campaignId, Date.now(), {from: account});
+        return crowdfundingInstance.failCampaign(campaignId, {from: account});
       }).then(function(result){
         return App.displayCampaigns();
       }).catch(function(err){
@@ -250,7 +244,7 @@ App = {
 
       App.contracts.CrowdfundingFactory.deployed().then(function(instance){
         crowdfundingInstance = instance;
-        return crowdfundingInstance.payDebt(campaignId,Date.now(), {from: account,value: web3.toWei(amount),gas:dameMasGasolina});
+        return crowdfundingInstance.payDebt(campaignId, {from: account,value: web3.toWei(amount),gas:dameMasGasolina});
       }).catch(function(err){
         console.log(err.message);
       });
@@ -290,14 +284,7 @@ App = {
       var account = accounts[0];
       App.contracts.CrowdfundingFactory.deployed().then(function(instance){
         crowdfundingInstance = instance;
-        crowdfundingInstance.stopped.call().then(function(stopped){
-          console.log(stopped)  
-          return crowdfundingInstance.toggleEmergency({from:account})
-        }).then(function(owner){
-           console.log("owner")
-          console.log(owner)  
-        })
-        
+        crowdfundingInstance.toggleEmergency({from:account})
       })
     })
   }
@@ -305,7 +292,6 @@ App = {
 };
 
 $(function() {
-  
 
     App.init();
   
@@ -313,8 +299,8 @@ $(function() {
 
 
 $('#exampleModal').on('show.bs.modal', function (event) {
-  $(".alert-success").hide()
-  $(".alert-danger").hide()
+  $(".modal .alert-success").hide()
+  $(".modal .alert-danger").hide()
 })
 
 $('#datetimepicker1').datepicker({
@@ -323,19 +309,15 @@ $('#datetimepicker1').datepicker({
 });
 
 $('body').tooltip({
-    selector: '[data-toggle="tooltip"]'
+    selector: '[data-toggle="tooltip"]',
+    trigger:'hover'
 });
-// var $grid2 = $('.grid').isotope({
-//   itemSelector: '.grid-item',
-//   layoutMode: 'fitRows',
-// })
-// $grid.isotope({ filter: ".a" });
 
 var $grid =$('#campaignsRow').isotope({
   // options
   itemSelector: '.campaign-container',
   layoutMode: 'fitRows',
-      });
+});
 $(".filter").click(function(){
   $grid.isotope({ filter: $(this).data('status') }); 
 })
@@ -375,12 +357,12 @@ function displayConstraints(data,campaignId,investor,account,campaignTemplate,ca
   var color; if (percent == 0){color="black"}else{color="white"};
   var date = new Date(data[5].toNumber())
   campaignTemplate.find('.campaign-container').attr("id","campaign-"+campaignId);
-  campaignTemplate.find('.campaign-container').attr("class","col-md-6 mt-3 mb-3 campaign-container is-"+status[0].toLowerCase());
+  campaignTemplate.find('.campaign-container').attr("class","col-md-6 campaign-container is-"+status[0].toLowerCase());
   campaignTemplate.find('.card-header').attr("class","card-header alert-"+status[1]+" text-"+status[1]);
-  campaignTemplate.find('.card').attr("class","card border-"+status[1]);
+  campaignTemplate.find('.card').attr("class","my-3 card border-"+status[1]);
   campaignTemplate.find('.progress-bar').css("width",percent+"%");
   campaignTemplate.find('.progress-bar').css("color",color);
-  campaignTemplate.find('.progress-bar').text(percent+"%");
+  campaignTemplate.find('.progress-bar').text(percent.toFixed(1)+"%");
   campaignTemplate.find('.campaign-invested-amount').text(investor["amount"]);
   campaignTemplate.find('.campaign-balance').text(investor["balance"]);
   campaignTemplate.find('.campaign-name').text(data[0]);
@@ -405,6 +387,9 @@ function displayConstraints(data,campaignId,investor,account,campaignTemplate,ca
   var image = data[1]
   if (image != ""){
     campaignTemplate.find('.campaign-img').attr("src",image);  
+  }
+  else{
+   campaignTemplate.find('.campaign-img').attr("src","images/placeholder-image.jpg");   
   }
 
   if (status[0]=="Active"){
@@ -463,5 +448,8 @@ function displayConstraints(data,campaignId,investor,account,campaignTemplate,ca
     campaignTemplate.find(".beneficiary-container").show()
     campaignTemplate.find(".paydebt-container").css("visibility","visible")
   }
-  campaignsRow.append(campaignTemplate.html());
+  //campaignsRow.append(campaignTemplate.html());
+  let $item = $(campaignTemplate.html())
+  $grid.append($item).isotope('appended',$item).isotope('layout')
+ 
 }
