@@ -16,8 +16,7 @@ App = {
     } else{
       App.web3Provider = new Web3.providers.HttpProvider('http://localhost:8545');
     }
-    web = new Web3(App.web3Provider);
-
+    web3 = new Web3(App.web3Provider);
     return App.initContract();
   },
 
@@ -122,9 +121,9 @@ App = {
         return crowdfundingInstance.owner.call();
 
       }).then(function(owner){
-        if (owner == account){
-          $("#emergencyStop").show()
-        }
+        if (owner == account){$("#emergencyStop").show()}
+        else{$("#emergencyStop").hide()}
+
         return crowdfundingInstance.numCampaigns.call();
       }).then(async function(campaigns){
 
@@ -333,6 +332,13 @@ $(".filter").click(function(){
   $grid.isotope({ filter: $(this).data('status') }); 
 })
 
+var accountA = web3.eth.accounts[0];
+var accountInterval = setInterval(function() {
+  if (web3.eth.accounts[0] !== accountA) {
+    accountA = web3.eth.accounts[0];
+    App.displayCampaigns();
+  }
+}, 100);
 
 
 function getStatusName(status){
