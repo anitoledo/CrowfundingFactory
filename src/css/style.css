@@ -18,7 +18,7 @@ h1 span{
 }
 .progress{
     height: 1.7rem;
-    font-size: 1rem;
+    font-size: 1.2rem;
 }
 .table{
     font-size: .9rem;
@@ -32,4 +32,32 @@ h1 span{
     bottom: 1rem;
     right:1rem;
     position: fixed;
+}
+.visible-active,
+.visible-refunding,
+.visible-terminated,
+.visible-failed,
+.investor-container,
+.beneficiary-container,
+.btn-goalReached{
+    display: none;
+}
+.is-active .visible-active,
+.is-refunding .visible-refunding,
+.is-terminated .visible-terminated,
+.is-failed .visible-failed{
+    display: inherit;
+}
+
+.is-investor .investor-container,
+.is-beneficiary .beneficiary-container,
+.goal-reached .btn-goalReached{
+    display: block;
+}
+
+.paydebt-container{
+    visibility: hidden;
+}
+.is-beneficiary .paydebt-container{
+    visibility: visible;
 }

@@ -131,25 +131,25 @@ App = {
       }).then(async function(campaigns){
 
        var campaignTemplate = $('#campaignTemplate');
-       var campaignsRow = $('#campaignsRow');
-       campaignsRow.html("")
+       $('#campaignsRow').html("")
+       
 
         for (i = 1; i <= campaigns; i ++) {
           const campaignId = i;
           var investor = await crowdfundingInstance.getInvestorID.call(i,{from:account}).then(async function(investorId){
             if (investorId > 0){
               var investor = await crowdfundingInstance.getInvestorInCampaign.call(investorId.toNumber(),campaignId).then(function(investor){
-                return {"isInvestor":true, "amount":web3.fromWei(investor[1].toNumber()/multiplier), "balance":web3.fromWei(investor[2].toNumber()/multiplier)}
+                return {"isInvestor":"is-investor", "amount":web3.fromWei(investor[1].toNumber()/multiplier), "balance":web3.fromWei(investor[2].toNumber()/multiplier)}
               });
               
               return investor
             }
-            return {"isInvestor":false, "amount":"N/A", "balance":"N/A"}
+            return {"isInvestor":"", "amount":"N/A", "balance":"N/A"}
           },function failure(){
           }.bind(campaignId));
           //var campaign = crowdfundingInstance.getCampaign.call(i).then(function(data){
           var campaign = crowdfundingInstance.campaigns.call(i).then(function(data){
-              displayConstraints(data,campaignId,investor,account,campaignTemplate,campaignsRow)
+              displayConstraints(data,campaignId,investor,account,campaignTemplate)
           },function failure(result){
 
           }.bind(campaignId))
@@ -369,7 +369,7 @@ function getStatusName(status){
   return [statusText,css];
 }
 
-function displayConstraints(data,campaignId,investor,account,campaignTemplate,campaignsRow){
+function displayConstraints(data,campaignId,investor,account,campaignTemplate){
   
   var status = getStatusName(data[9].toNumber());
   var refundDeadline = new Date(data[6].toNumber()*miliseconds)
@@ -377,8 +377,15 @@ function displayConstraints(data,campaignId,investor,account,campaignTemplate,ca
   var percent = data[2]/data[3]*multiplier
   var color; if (percent == 0){color="black"}else{color="white"};
   var date = new Date(data[5].toNumber()*miliseconds)
+  var isBeneficiary,goalReached = ""
+  if (data[4] == account){
+    isBeneficiary = "is-beneficiary"
+  }
+  if (data[2].toNumber() == data[3].toNumber()){
+    goalReached = "goal-reached"
+  }
   campaignTemplate.find('.campaign-container').attr("id","campaign-"+campaignId);
-  campaignTemplate.find('.campaign-container').attr("class","col-md-6 campaign-container is-"+status[0].toLowerCase());
+  campaignTemplate.find('.campaign-container').attr("class","col-md-6 campaign-container is-"+status[0].toLowerCase()+" "+investor["isInvestor"]+" "+isBeneficiary+" "+goalReached);
   campaignTemplate.find('.card-header').attr("class","card-header alert-"+status[1]+" text-"+status[1]);
   campaignTemplate.find('.card').attr("class","my-3 card border-"+status[1]);
   campaignTemplate.find('.progress-bar').css("width",percent+"%");
@@ -411,63 +418,6 @@ function displayConstraints(data,campaignId,investor,account,campaignTemplate,ca
   }
   else{
    campaignTemplate.find('.campaign-img').attr("src","images/placeholder-image.jpg");   
-  }
-
-  if (status[0]=="Active"){
-    campaignTemplate.find(".visible-active").show()
-
-    if (data[2].toNumber() == data[3].toNumber()){
-
-      campaignTemplate.find('.btn-goalReached').show();
-    }
-    else{
-      campaignTemplate.find('.btn-goalReached').hide();
-    }
-   }
-   else{
-    campaignTemplate.find(".visible-active").hide()
-   }
-
-   if (status[0]=="Refunding"){
-    campaignTemplate.find(".visible-refunding").show()
-  }
-  else{
-    campaignTemplate.find(".visible-refunding").hide()
-   }
-
-   if (status[0] == "Terminated"){
-    campaignTemplate.find(".visible-terminated").show()
-   }
-   else{
-    campaignTemplate.find(".visible-terminated").hide()
-    if (status[0] == "Refunding") {
-      campaignTemplate.find(".visible-terminated.visible-refunding").show()  
-    }
-    
-   }
-   if (status[0] == "Failed"){
-    campaignTemplate.find(".visible-failed").show()
-   }
-   else{
-    campaignTemplate.find(".visible-failed").hide()
-    if (status[0] == "Active") {
-      campaignTemplate.find(".visible-active.visible-failed").show()
-    }
-   }
-
-   if (investor["isInvestor"]){
-    campaignTemplate.find(".investor-container").show()
-  }
-  else{
-    campaignTemplate.find(".investor-container").hide()
-  }
-  if (data[4] != account){
-    campaignTemplate.find(".beneficiary-container").hide()
-    campaignTemplate.find(".paydebt-container").css("visibility","hidden")
-  }
-  else{
-    campaignTemplate.find(".beneficiary-container").show()
-    campaignTemplate.find(".paydebt-container").css("visibility","visible")
   }
   //campaignsRow.append(campaignTemplate.html());
   let $item = $(campaignTemplate.html())
