@@ -115,11 +115,6 @@ contract CrowdfundingFactory {
     /** 
         @dev Contributes to a campaign.  
         @param campaignID Id of the desired campaign.
-        @param imageUrl Image url of the campaign.
-        @param goal Goal of the campaign.
-        @param endDate End date of the campaign.
-        @param rate Rate of the campaign.
-        @param term Term of the campaign.
     */
     function contribute(uint256 campaignID) validAmount(campaignID) active(campaignID) activeValidDate(campaignID) stopInEmergency public payable{
         Campaign storage campaign = campaigns[campaignID];
