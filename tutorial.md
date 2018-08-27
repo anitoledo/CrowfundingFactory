@@ -20,7 +20,7 @@
 <img src="captures/activeWhenContributed.png" width="300">
 <strong>6.</strong> After the "Goal Reached" button is clicked and the money has transfered to the beneficiary the "Pay Debt" section will display and the Campaign status will change. To pay the debt fill the amount and click the button. <img src="captures/payDebt.png" width="200">
 <strong>7.</strong> When paying a debt the investor balance will increment and the investor will be able to claim the share. 
-<img src="captures/investor.png" width="300">
+<img src="captures/investor.png" width="150">
 <strong>8.</strong> When the debt has been fully payed the campaign status will change to "Terminated". </br></br>
 
 Additionally, if a bug presents there is a "Emergency Stop" button as a circuit breaker.
