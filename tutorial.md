@@ -1,6 +1,6 @@
 # Tutorial
 
-<strong>NOTE: </strong> On each interaction with the dApp you will need to check Metamask to confirm the transaction. Also sometimes to visualize interface changes it will be necessary to refresh the page after the transaction has been confirmed.<br>
+<strong>NOTE: </strong> On each interaction with the dApp you will need to check Metamask to confirm the transaction. Also sometimes to see the changes reflected it will be necessary to refresh the page after the transaction has been confirmed.<br>
 
 <strong>1.</strong> Click the "Create Campaign" button to create a new campaign. <img src="captures/buttonCreate.png" width="100">
 <strong>2.</strong> Fill the form with the desire data:
