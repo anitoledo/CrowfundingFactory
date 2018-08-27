@@ -17,6 +17,7 @@ You will need node.js installed, which you can get [here](https://nodejs.org/es/
 
 ```
 npm install -g ganache-cli
+npm install -g truffle
 ```
 
 The project uploads images to ipfs. Follow the [IPFS install guide](https://ipfs.io/docs/install/) for your operating 
@@ -51,14 +52,14 @@ ipfs daemon
 Lastly for running the application:
 
 ```
-npm migrate
+truffle migrate
 npm run dev
 ```
 
 ## Running the tests
 
 ```
-npm test
+truffle test
 ```
 
 ## Acknowledgments
