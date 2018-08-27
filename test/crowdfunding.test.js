@@ -10,6 +10,10 @@ contract('CrowdfundingFactory', function(accounts) {
     var multiplier = 10**2;
 
 
+    /** 
+        Creates a campaign and compares the name of the campaign to verify if it was
+        succesfully and correctly saved.
+    */
     it("should create campaign", async() => {
         const crowdfundingFactory = await CrowdfundingFactory.deployed()
         
@@ -23,6 +27,11 @@ contract('CrowdfundingFactory', function(accounts) {
         assert.equal( campaign_2[0], "Punk Marketing 2", 'name campaign not ok')
     })
 
+    /** 
+        Users contribute to campaign. Comprobates that we are getting the correct investor id and 
+        correct investor's data. Also verifies that the campaign's amount and investor's amount
+        are increasing.
+    */
     it("should contribute to campaign", async() => {
         const crowdfundingFactory = await CrowdfundingFactory.deployed()
         
@@ -53,6 +62,11 @@ contract('CrowdfundingFactory', function(accounts) {
         assert.equal( investorOwner_2[1].toNumber()/multiplier, 100, 'investor amount not ok')
     })
 
+    /** 
+        Calls goalReached and checks if state of campaign has changed and debt is correctly calculated.
+        Also comprobates that payDebt decreases debt and that the deposited amount is correctly 
+        distributed among the campaing's investors balance.
+    */
     it("should terminate campaign", async() => {
         const crowdfundingFactory = await CrowdfundingFactory.deployed()
         
@@ -78,6 +92,9 @@ contract('CrowdfundingFactory', function(accounts) {
         assert.equal( campaign_1[9].toNumber(), 2, 'status not ok')
     })
 
+    /** 
+        Verifies claimed amount is successfully transfered.
+    */
     it("should claim share", async() => {
         const crowdfundingFactory = await CrowdfundingFactory.deployed()
 
@@ -91,6 +108,9 @@ contract('CrowdfundingFactory', function(accounts) {
         assert.equal( investorAlice_1[2].toNumber()/multiplier, 0, 'investor balance amount not ok')
     })
 
+    /** 
+        Test of complete contract cicle with ether values.
+    */
     it("test ether", async() => {
         const crowdfundingFactory = await CrowdfundingFactory.deployed()
         
@@ -101,6 +121,9 @@ contract('CrowdfundingFactory', function(accounts) {
         await crowdfundingFactory.claimShare(3, {from: alice});
     })
 
+    /** 
+        Checks if emergency stop is succesfully working.
+    */
     it("should withdraw emergency money", async() => {
         const crowdfundingFactory = await CrowdfundingFactory.deployed()
         
