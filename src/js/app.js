@@ -1,6 +1,9 @@
 var multiplier = 100
 var miliseconds = 1000
 var dameMasGasolina = 1000000
+const monthNames = ["Jan.", "Feb.", "Mar.", "Apr.", "May", "June",
+  "July", "Aug.", "Sept.", "Oct.", "Nov.", "Dec."
+];
 
 App = {
   web3Provider: null,
@@ -16,8 +19,7 @@ App = {
     } else{
       App.web3Provider = new Web3.providers.HttpProvider('http://localhost:8545');
     }
-    web = new Web3(App.web3Provider);
-
+    web3 = new Web3(App.web3Provider);
     return App.initContract();
   },
 
@@ -55,7 +57,7 @@ App = {
     var rate = $('#rate').val();
     var term = $('#term').val();
     var date = $('#datetimepicker1').val();
-    var endDate = Date.parse(date)/multiplier;
+    var endDate = Date.parse(date)/miliseconds;
 
     if (name == "" || goal == "" || rate =="" || term == "" || isNaN(endDate)){
       $(".alert-danger").show()
@@ -122,9 +124,9 @@ App = {
         return crowdfundingInstance.owner.call();
 
       }).then(function(owner){
-        if (owner == account){
-          $("#emergencyStop").show()
-        }
+        if (owner == account){$("#emergencyStop").show()}
+        else{$("#emergencyStop").hide()}
+
         return crowdfundingInstance.numCampaigns.call();
       }).then(async function(campaigns){
 
@@ -333,6 +335,13 @@ $(".filter").click(function(){
   $grid.isotope({ filter: $(this).data('status') }); 
 })
 
+var accountA = web3.eth.accounts[0];
+var accountInterval = setInterval(function() {
+  if (web3.eth.accounts[0] !== accountA) {
+    accountA = web3.eth.accounts[0];
+    App.displayCampaigns();
+  }
+}, 100);
 
 
 function getStatusName(status){
@@ -382,12 +391,12 @@ function displayConstraints(data,campaignId,investor,account,campaignTemplate,ca
   campaignTemplate.find('.campaign-status>span').attr("class","badge badge-"+status[1]);
   campaignTemplate.find('.campaign-amount').text(web3.fromWei(data[2]/multiplier));
   campaignTemplate.find('.campaign-goal').text(web3.fromWei(data[3]/multiplier));
-  campaignTemplate.find('.campaign-endDate').text(date.getDate()+"/"+(date.getMonth()+1)+"/"+date.getFullYear());
+  campaignTemplate.find('.campaign-endDate').text(date.getDate()+" "+monthNames[(date.getMonth())]+" "+date.getFullYear());
   campaignTemplate.find('.campaign-term').text(data[8]+" months");
   campaignTemplate.find('.campaign-term-value').val(data[8]);
   campaignTemplate.find('.campaign-rate').text(data[7]+"%");
   campaignTemplate.find('.campaign-debt').text(web3.fromWei(data[10]/multiplier));
-  campaignTemplate.find('.refund-deadline').text(refundDeadline.getDate()+"/"+(refundDeadline.getMonth()+1)+"/"+refundDeadline.getFullYear());
+  campaignTemplate.find('.refund-deadline').text(refundDeadline.getDate()+" "+monthNames[(refundDeadline.getMonth())]+" "+refundDeadline.getFullYear());
   campaignTemplate.find('.beneficiary-address').text(data[4]);
   campaignTemplate.find('.btn-contribute').text("Contribute");
   campaignTemplate.find('.btn-contribute').val(campaignId);
