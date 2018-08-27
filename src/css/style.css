@@ -58,6 +58,11 @@ h1 span{
 .paydebt-container{
     visibility: hidden;
 }
-.is-beneficiary .paydebt-container{
+.is-refunding.is-beneficiary .paydebt-container{
     visibility: visible;
+}
+.goal-reached .contribute-container,
+.goal-reached .paydebt-container,
+.is-failed .paydebt-container{
+    display: none;
 }
