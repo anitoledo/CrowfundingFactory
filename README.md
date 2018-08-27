@@ -7,7 +7,7 @@ If the goal is not met by the deadline, the investors get their money back.<br>
 If the goal is met, the beneficiary gets the money and compromises to pay a debt (which will be the amount gathered plus the stated rate)
 within a deadline (wich will be the the date when the goal was reached plus the months stated as term). 
 
-To know how the workflow of the dApp works, read the [dApp tutorial]().
+To know how the workflow of the dApp works, read the [dApp tutorial](https://github.com/anitoledo/CrowfundingFactory/blob/master/tutorial.md).
 
 ## Getting Started
 
