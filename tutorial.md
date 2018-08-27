@@ -16,4 +16,8 @@
 3. Once the campaign is created a card with the information will be displayed.
 <img src="captures/active.png" width="300">
 4. To contribute to the campaign fill the amount and click the button.  <img src="captures/contribute.png" width="200">
-5. 
+5. Once you have contributed to a campaign the progress bar will increment and an "Investor" section will display with the investor information.
+<img src="captures/activeWhenContributed.png" width="300">
+6. If you are the beneficiary a "Beneficiary" section will display. If the campaign has met the goal you can click the "Goal Reached" button to get the collected or if the goal is not met you can click "Fail Campaign" button to refund the money.
+<img src="captures/beneficiary.png" width="300">
+7. 
