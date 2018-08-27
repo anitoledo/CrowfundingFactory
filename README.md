@@ -7,11 +7,15 @@ If the goal is not met by the deadline, the investors get their money back.<br>
 If the goal is met, the beneficiary gets the money and compromises to pay a debt (which will be the amount gathered plus the stated rate)
 within a deadline (wich will be the the date when the goal was reached plus the months stated as term). 
 
+To know how the workflow of the dApp works, read the [dApp tutorial]().
+
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 
 ### Prerequisites
+
+To interact with the app in a browser you will need to install [Metamask](https://metamask.io/) in your browser.
 
 You will need node.js installed, which you can get [here](https://nodejs.org/es/). Then install the following packages:
 
@@ -37,7 +41,7 @@ ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin "[\"*\"]"
 
 ### Installing
 
-You need ganache client running:
+Firstly you need ganache client running:
 
 ```
 ganache-cli
@@ -49,12 +53,20 @@ And ipfs server:
 ipfs daemon
 ```
 
-Lastly for running the application:
+Then for running the application:
 
 ```
 truffle migrate
 npm run dev
 ```
+
+And lastly to configure Metamask:
+
+1. Check that the chosen network is Localhost 8545
+2. Select the option "Import using account seed phrase"
+3. Use the mnemonic phrase your ganache client gave you when running.
+4. Set your password.
+5. Interact with the dApp!
 
 ## Running the tests
 
