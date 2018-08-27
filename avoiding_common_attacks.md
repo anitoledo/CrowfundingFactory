@@ -1,10 +1,9 @@
-# Design Pattern Desicions
-### Fail early and fail loud
-With this pattern it can be assured that the conditions for the function are properly met before any other code execution.
-### Restricting Access
-Because it is an investing system certain functions need to be executed from specific user addresses so the flow of the contract 
-is correctly executed.
-### Pull over Push Payments
-The contract is constantly receiving and transfering money, to avoid re-entrancy and denial of service attacks this pattern is the best solution.
-### Circuit Breaker
-In case a bug presents, the functions that manage money are stoped.
+# Avoiding Common Attacks
+* Using the library [SafeMath](https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/math/SafeMath.sol) will avoid
+arithmetic overflows.
+* The use of a multiplier for more precision rounding with integer division.
+* Implementing the Fail early and fail loud design pattern to assure that the conditions for the function are properly met before any other code execution.
+* Avoiding tx.origin to assure that the address calling the functions is the correct one.
+* Implementing Pull over Push Payments design pattern to avoid re-entrancy and denial of service attacks.
+* Implementing Circuit breaker design pattern in case a bug presents.
+* Avoid changing state variables after transfer().
